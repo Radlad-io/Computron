@@ -1,4 +1,5 @@
 require('dotenv').config();
+
 const fs = require('fs');
 const config = require('./config.json');
 const path = require('path');
@@ -12,9 +13,6 @@ const client = new Discord.Client();
 const ComputronMenu = require('../menus/help');
 const Dwight = require('../menus/dwight_menu');
 
-const Sound = require('../commands/dwight');
-const dwight = require('../commands/dwight');
-const { replace } = require('ffmpeg-static');
 
 
 //DYNAMIC COMMAND MODULE IMPORT
@@ -28,7 +26,6 @@ for (const file of commandFiles) {
 }
 
 
-
 // HELP MENU FUNCTION
 client.on('message', (msg) => {
   if (msg.content === `${prefix}help`) {
@@ -36,21 +33,33 @@ client.on('message', (msg) => {
   }
 });
 
+
+
+
+// Dwight
 client.on('message', (msg) => {
   if (!msg.content.startsWith(prefix) || msg.author.bot){
+    return
+  }else if (msg.content === `${prefix}d` || msg.content === `${prefix}dwight`) {
+    msg.reply(Dwight.DwightMenu)
+    .then((sentMessage) => {
+      Object.values(Dwight.DwightButtons).forEach(val => {
+        sentMessage.react(val)
+      })
+    })
     return
   }else if(!msg.member.voice.channelID){
     msg.channel.send('You need to be in a voice channel')
     return
-  }else if (msg.content === `${prefix}d` || msg.content === `${prefix}dwight`) {
-    msg.reply(Dwight.DwightMenu)
-    return
-  } else if (msg.content.startsWith(`${prefix}d`) || msg.content.startsWith(`${prefix}dwight`)) {
+  }else if (msg.content.startsWith(`${prefix}d`) || msg.content.startsWith(`${prefix}dwight`)) {
     let Location = 'dwight';
     let Name = msg.content.split(" ")[1]
     playSoundOverVoiceChannel(msg, Location, Name)
   }
 });
+
+
+
 
 function playSoundOverVoiceChannel(msg, Location, Name){
   if (fs.existsSync(path.join(__dirname, `../assets/sounds/${Location}/${Location}_${Name}.mp3`))) {
@@ -60,10 +69,8 @@ function playSoundOverVoiceChannel(msg, Location, Name){
   } else {
     msg.channel.send('Computron can not find the file you are looking for. Its probably your fault though.')
   }
+  console.log(msg.member.voice.channel.id)
 }
-
-
-
 
 
 
@@ -72,6 +79,7 @@ client.on('message', async msg => {
   // Join the same voice channel of the author of the message
   if (msg.content === `${prefix}join` &&  msg.member.voice.channel) {
     const connection = await msg.member.voice.channel.join();
+    console.log(msg.member.voice.channel)
   }else{
     return;
   }
@@ -79,7 +87,6 @@ client.on('message', async msg => {
 
 //!JOIN - REMOVE COMPUTRON FROM DISCORD CHANNEL
 client.on('message', async msg => {
-
   if (msg.content === `${prefix}leave` &&  msg.member.voice.channel) {
     const connection = await msg.member.voice.channel.leave();
   }else{
@@ -91,13 +98,42 @@ client.on('message', async msg => {
 
 
 
-
-
-
 // COMMAND LINE FEEDBACK FOR LOGIN
 client.on('ready', () => {
   console.log(`${client.user.tag} has logged in.`);
 });
 
-
 client.login(process.env.COMPUTRON_TOKEN);
+
+
+
+// API
+client.on('messageReactionAdd', (msg) => {
+  console.log('-- 🐤')
+  if( msg.count <= 1 ){
+    return
+  }
+  var results = [];
+  var options = Dwight.DwightButtons;
+  var toSearch = msg._emoji.name;
+  for(var i=0; i<options; i++) {
+    for(key in options[i]) {
+      if(options[i][key].indexOf(toSearch)!=-1) {
+        results.push(options[i]);
+      }
+    }
+  }
+  console.log(results)
+  if(results){
+    // console.log(msg._emoji.name)
+    let location = Dwight.Sounds[results];
+    console.log(location);
+    let clip = Dwight.Sounds;
+    console.log(location);
+    const voiceChannel = client.channels.cache.get('384139844907040772')
+    voiceChannel.join().then((connection) => {
+    connection.play(path.join(__dirname, `../assets/sounds/dwight/dwight_hurt.mp3`))
+  })
+  }
+})
+
