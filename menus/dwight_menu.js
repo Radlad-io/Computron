@@ -8,7 +8,7 @@ const prefix = config.prefix;
 
 //Instantiates a sounds object to store information about this characters sounds
 let Sounds = new Object();
-let DwightButtons = {
+let DwightEmojis = {
     0: '🥉',
     1: '😭',
     2: '🥳',
@@ -32,7 +32,8 @@ function RetreiveDwightsAudioClips() {
     fs.readdirSync(folder).forEach(file => {
         let character = file.split("_")[0]
         let name = file.split("_")[1]
-        Sounds[i] = { character, name }
+        let emoji = DwightEmojis[i]
+        Sounds[i] = { character, name, emoji }
         i++;
     });
 }
@@ -54,16 +55,14 @@ const DwightMenu = new Discord.MessageEmbed()
 for (i = 0; i < Object.keys(Sounds).length; i++) {
     let character = Sounds[i].character
     let name = Sounds[i].name.split('.')[0]
-    DwightMenu.addField(DwightButtons[i] + " " + name , name,true)
+    DwightMenu.addField(DwightEmojis[i] + " " + name , name,true)
 }
 
 
 
 // Exports menu for use in the main module
-exports.Sounds = Sounds;  
-exports.DwightButtons = DwightButtons;
+exports.Sounds = Sounds;
 exports.DwightMenu = DwightMenu;
-exports.RetreiveDwightsAudioClips = RetreiveDwightsAudioClips;
 
 
 

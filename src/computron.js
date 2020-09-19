@@ -43,8 +43,8 @@ client.on('message', (msg) => {
   }else if (msg.content === `${prefix}d` || msg.content === `${prefix}dwight`) {
     msg.reply(Dwight.DwightMenu)
     .then((sentMessage) => {
-      Object.values(Dwight.DwightButtons).forEach(val => {
-        sentMessage.react(val)
+      Object.values(Dwight.Sounds).forEach(val => {
+        sentMessage.react(val.emoji)
       })
     })
     return
@@ -97,43 +97,42 @@ client.on('message', async msg => {
 
 
 
-
-// COMMAND LINE FEEDBACK FOR LOGIN
-client.on('ready', () => {
-  console.log(`${client.user.tag} has logged in.`);
-});
-
-client.login(process.env.COMPUTRON_TOKEN);
-
-
-
-// API
 client.on('messageReactionAdd', (msg) => {
-  console.log('-- 🐤')
+
+  // Keeps audio from playing while bot adds initial reactions
   if( msg.count <= 1 ){
     return
   }
-  var results = [];
-  var options = Dwight.DwightButtons;
-  var toSearch = msg._emoji.name;
-  for(var i=0; i<options; i++) {
+
+  // Searches through sound object to find sound that matches reaction
+  var results = {};
+  var options = Dwight.Sounds;
+
+  for(i=0; i<Object.keys(options).length; i++) {
     for(key in options[i]) {
-      if(options[i][key].indexOf(toSearch)!=-1) {
-        results.push(options[i]);
+      if(options[i].emoji === msg.emoji.name) {
+        results = options[i];
       }
     }
   }
-  console.log(results)
+
+  // Plays sound
   if(results){
-    // console.log(msg._emoji.name)
-    let location = Dwight.Sounds[results];
-    console.log(location);
-    let clip = Dwight.Sounds;
-    console.log(location);
     const voiceChannel = client.channels.cache.get('384139844907040772')
     voiceChannel.join().then((connection) => {
-    connection.play(path.join(__dirname, `../assets/sounds/dwight/dwight_hurt.mp3`))
+    connection.play(path.join(__dirname, `../assets/sounds/${results.character}/${results.character}_${results.name}`))
   })
   }
+
+})
+
+
+
+
+client.login(process.env.COMPUTRON_TOKEN)
+.then(() =>{
+  client.on('ready', () => {
+    console.log(`${client.user.tag} has logged in.`);
+  });
 })
 
